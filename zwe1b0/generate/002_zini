@@ -7,19 +7,19 @@ fi
 verb="$1"
 script="$2"
 
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat << EOF >${script}
 #!/bin/sh
 #set -x
 export verb="${verb}"
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 
 set +x
-zowedir="\${ZBREW_TGT_ZFSROOT}usr/lpp/zowe"
+zowedir="\${ZOSPM_TGT_ZFSROOT}usr/lpp/zowe"
 zoweinstancedir="\${ZWE1B0_INSTANCE_ROOT}"
 EOF
 

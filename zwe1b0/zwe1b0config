@@ -1,7 +1,7 @@
 #!/bin/sh
-. zbrewsetenv
+. zospmsetenv
 
-zweRoot="${ZBREW_WORKROOT}/config/zwe1b0"
+zweRoot="${ZOSPM_WORKROOT}/config/zwe1b0"
 mkdir -p "${zweRoot}"
 rc=$?
 if [ $rc -gt 0 ]; then

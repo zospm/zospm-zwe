@@ -1,3 +1,3 @@
-# zbrew-zwe
-Zowe zbrew package
+# zospm-zwe
+Zowe zospm package
 

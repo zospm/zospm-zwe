@@ -7,16 +7,16 @@ fi
 verb="$1"
 script="$2"
 
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat << EOF >${script}
 #!/bin/sh
 #set -x
 export verb="${verb}"
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 
 set +x
 EOF
@@ -99,15 +99,15 @@ SetupACF2() {
 	return 8
 }
 SetupCertificates() {
-	ZOWE_ROOT="${ZBREW_TGT_ZFSROOT}/usr/lpp/zowe/"
-	zbrewZoweConfigFile="${ZBREW_TMP}/zoweconfig.$$.tmp"
+	ZOWE_ROOT="${ZOSPM_TGT_ZFSROOT}/usr/lpp/zowe/"
+	zospmZoweConfigFile="${ZOSPM_TMP}/zoweconfig.$$.tmp"
 	echo "
               	HOSTNAME=${ZWE1B0_HOSTNAME}
 		IPADDRESS=${ZWE1B0_IPADDRESS}
 		VERIFY_CERTIFICATES=${ZWE1B0_VERIFY_CERTIFICATES}
 		EXTERNAL_CERTIFICATE=${ZWE1B0_EXTERNAL_CERTIFICATE}
 		EXTERNAL_CERTIFICATE_ALIAS=${ZWE1B0_CERTIFICATE_ALIAS}
-		EXTERNAL_CERTIFICATE_AUTHORITIES=${ZBREW_CERTIFICATE_AUTHORITES}
+		EXTERNAL_CERTIFICATE_AUTHORITIES=${ZOSPM_CERTIFICATE_AUTHORITES}
 		ZOSMF_CERTIFICATE=${ZOS240_ZOSMF_CERTIFICATE}
 		KEYSTORE_PASSWORD=${ZWE1B0_KEYSTORE_PASSWORD}
 		KEYSTORE_DIRECTORY=${ZWE1B0_KEYSTORE_DIRECTORY}
@@ -116,8 +116,8 @@ SetupCertificates() {
 		ZOWE_GROUP_ID=${ZWE1B0_ADMINGRP}
 		PKCS11_TOKEN_NAME=${ZWE1B0_PKCS11_TOKEN_NAME}  
 		PKCS11_TOKEN_LABEL=${ZWE1B0_PKCS11_TOKEN_LABEL}  
-	" >${zbrewZoweConfigFile}
-	${ZOWE_ROOT}/bin/zowe-setup-certificates.sh -p ${zbrewZoweConfigFile}
+	" >${zospmZoweConfigFile}
+	${ZOWE_ROOT}/bin/zowe-setup-certificates.sh -p ${zospmZoweConfigFile}
 
 	return 0
 }
@@ -125,7 +125,7 @@ EOF
 fi
 
 cat <<'EOF' >>${script}
-. zbrewsetswenv zwe1b0
+. zospmsetswenv zwe1b0
 #set -x
 sp=`secmgr`
 if [ "${sp}" = "RCVT" ]; then                                       

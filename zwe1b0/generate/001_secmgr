@@ -10,9 +10,9 @@ fi
 
 verb="$1"
 script="$2"
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat <<'EOF' >${script}
 #!/bin/sh   
@@ -437,8 +437,8 @@ EOF
 
 chmod u+x "${script}"
 cat << EOF >>${script}
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 #set -x
 sp=\`secmgr\`
 if [ "\${sp}" = "RCVT" ]; then

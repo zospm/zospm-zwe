@@ -9,9 +9,9 @@ fi
 
 verb="$1"
 script="$2"
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat <<'EOF' >${script}
 #!/bin/sh   
@@ -24,7 +24,7 @@ CreatePKDS() {
 CreateTKDS() {
 	cluster="CSF.SCSFTKDS"
 
-	err=${ZBREW_TMP}/csftkds.$$.err
+	err=${ZOSPM_TMP}/csftkds.$$.err
 	touch "${err}"
 	mvscmdauth --pgm=IDCAMS --sysprint=* --sysin=stdin >"${err}" <<zz
   DEFINE CLUSTER (NAME(${cluster}) -
@@ -94,8 +94,8 @@ EOF
 chmod u+x "${script}"
 
 cat << EOF >>${script}
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 EOF
 
 cat <<'EOF' >>${script}
@@ -130,28 +130,28 @@ chkICSF() {
 }
 
 chkJava() {
-	if `undefinedProperty $ZBREW_JAVA_HOME`; then
-		echo "000_prereq: need to specify ZBREW_JAVA_HOME to configure Zowe" >&2
+	if `undefinedProperty $ZOSPM_JAVA_HOME`; then
+		echo "000_prereq: need to specify ZOSPM_JAVA_HOME to configure Zowe" >&2
 		return 4
 	fi
-	$ZBREW_JAVA_HOME/bin/java -version >/dev/null 2>&1
+	$ZOSPM_JAVA_HOME/bin/java -version >/dev/null 2>&1
 	rc=$?
 	if [ $rc -gt 0 ]; then
-		echo "000_prereq: unable to run $ZBREW_JAVA_HOME/bin/java -version. Configure Java before configuring Zowe" >&2
+		echo "000_prereq: unable to run $ZOSPM_JAVA_HOME/bin/java -version. Configure Java before configuring Zowe" >&2
 		return $rc
 	fi
 	return 0
 }
 
 chkNode() {
-	if `undefinedProperty $ZBREW_NODE_HOME`; then
-		echo "000_prereq: need to specify ZBREW_NODE_HOME to configure Zowe" >&2
+	if `undefinedProperty $ZOSPM_NODE_HOME`; then
+		echo "000_prereq: need to specify ZOSPM_NODE_HOME to configure Zowe" >&2
 		return 4
 	fi
-	$ZBREW_NODE_HOME/bin/node --version >/dev/null
+	$ZOSPM_NODE_HOME/bin/node --version >/dev/null
 	rc=$?
 	if [ $rc -gt 0 ]; then
-		echo "000_prereq: unable to run $ZBREW_NODE_HOME/bin/node --version. Configure Node.js before configuring Zowe" >&2
+		echo "000_prereq: unable to run $ZOSPM_NODE_HOME/bin/node --version. Configure Node.js before configuring Zowe" >&2
 		return $rc
 	fi
 	return 0

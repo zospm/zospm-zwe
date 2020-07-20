@@ -7,22 +7,22 @@ fi
 verb="$1"
 script="$2"
 
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat << EOF >${script}
 #!/bin/sh
 #set -x
 export verb="${verb}"
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 
 set +x
-authlib="\${ZBREW_TGT_HLQ}ZWE1B0.SZWEAUTH"
-srclib="\${ZBREW_TGT_HLQ}ZWE1B0.SZWESAMP"
-parmlib="\${ZBREW_TGT_HLQ}PARMLIB"
-proclib="\${ZBREW_TGT_HLQ}PROCLIB"
+authlib="\${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"
+srclib="\${ZOSPM_TGT_HLQ}ZWE1B0.SZWESAMP"
+parmlib="\${ZOSPM_TGT_HLQ}PARMLIB"
+proclib="\${ZOSPM_TGT_HLQ}PROCLIB"
 EOF
 
 if [ $? -gt 0 ]; then
@@ -36,11 +36,11 @@ cat <<'EOF' >>${script}
 	swesip=`cat "//'${srclib}(ZWESIP00)'"`
 
 	sijcl=`cat "//'${srclib}(ZWESISTC)'"`
-	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "STEPLIB" "${ZBREW_TGT_HLQ}ZWE1B0.SZWEAUTH"`
+	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "STEPLIB" "${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"`
 	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "PARMLIB" "${parmlib}"`
 
 	sajcl=`cat "//'${srclib}(ZWESASTC)'"`
-	sajcl=`jclReplaceDD "${sajcl}" "ZWESAUX" "STEPLIB" "${ZBREW_TGT_HLQ}ZWE1B0.SZWEAUTH"`
+	sajcl=`jclReplaceDD "${sajcl}" "ZWESAUX" "STEPLIB" "${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"`
 EOF
 else
 cat <<'EOF' >>${script}

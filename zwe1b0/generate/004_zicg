@@ -7,19 +7,19 @@ fi
 verb="$1"
 script="$2"
 
-zbrew=`whence zbrew`
-zbrewdir=${zbrew%/*}
-zbrewroot=${zbrewdir%/*}
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
 
 cat << EOF >${script}
 #!/bin/sh
 #set -x
 export verb="${verb}"
-export PATH=${zbrewdir}:\$PATH
-. zbrewsetswenv zwe1b0
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv zwe1b0
 
 set +x
-zowedir="\${ZBREW_TGT_ZFSROOT}usr/lpp/zowe"
+zowedir="\${ZOSPM_TGT_ZFSROOT}usr/lpp/zowe"
 zoweinstancedir="\${ZWE1B0_INSTANCE_ROOT}"
 EOF
 
@@ -31,13 +31,13 @@ chmod u+x "${script}"
 
 if [ "${verb}" = "ENABLE" ]; then
 cat <<'EOF' >>${script}
-	chkProperties "ZBREW_JAVA_HOME ZBREW_NODE_HOME ZWE1B0_IPADDRESS" 
+	chkProperties "ZOSPM_JAVA_HOME ZOSPM_NODE_HOME ZWE1B0_IPADDRESS" 
 	if [ $? -gt 0 ]; then
 		echo "004_zicfg failed." >&2
 		exit 8
 	fi
-	export JAVA_HOME="${ZBREW_JAVA_HOME}"
-	export NODE_HOME="${ZBREW_NODE_HOME}"
+	export JAVA_HOME="${ZOSPM_JAVA_HOME}"
+	export NODE_HOME="${ZOSPM_NODE_HOME}"
 	export ZOWE_EXPLORER_HOST="${ZWE1B0_IPADDRESS}"
 	export ZOWE_IP_ADDRESS="${ZWE1B0_IPADDRESS}"
 	export ZOWE_ZOSMF_HOST="${ZWE1B0_IPADDRESS}"
