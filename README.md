@@ -67,7 +67,7 @@ Configure zospm for Zowe:
 This will create a set of scripts in your $ZOSPM_WORKROOT/config/zwe1b0 directory
 - Inspect these scripts if you want. These scripts will perform your system-specific configuration
 - You can either run the scripts one at a time manually, or you can say:
- - zospmsteps config zwe1b0
+ - zospmrunsteps config zwe1b0
  - which will run each step in turn, stopping if any step fails
  
 Zowe should now be installed and configured on your system.
@@ -79,7 +79,7 @@ and should be incorporated into your system as per your company policies
 
 To remove Zowe from the target system:
 - zospm deconfigure zwe1b0
-- zospmsteps deconfig zwe1b0
+- zospmrunsteps deconfig zwe1b0
 
 To uninstall Zowe from the source system:
 - zospm uninstall zwe1b0
