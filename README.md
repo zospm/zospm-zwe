@@ -3,6 +3,7 @@ This readme describes how to use this package to install and configure Zowe usin
 You will need to install and configure zospm, along with Z Open Automation Utilities first before you can install Zowe. 
 See the zospm readme for details on installing and configure zospm.
 
+
 # Get Zowe:
 - If you do not know the name of the Zowe package, you can find it using search:
  - zospm search zowe
