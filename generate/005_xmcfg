@@ -1,11 +1,12 @@
 #!/bin/sh
 
-if ! [ $# -eq 2 ]; then
-	echo "Syntax: 003_xmemcfg ENABLE|DISABLE <output-script>" >&2
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 003_xmemcfg <sw> CONFIG|DECONFIG <output-script>" >&2
 	exit 8
 fi
-verb="$1"
-script="$2"
+sw="$1"
+verb="$2"
+script="$3"
 
 zospm=`whence zospm`
 zospmdir=${zospm%/*}
@@ -16,31 +17,32 @@ cat << EOF >${script}
 #set -x
 export verb="${verb}"
 export PATH=${zospmdir}:\$PATH
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 
 set +x
-authlib="\${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"
-srclib="\${ZOSPM_TGT_HLQ}ZWE1B0.SZWESAMP"
+authlib="\${ZOSPM_TGT_HLQ}${sw}.SZWEAUTH"
+srclib="\${ZOSPM_TGT_HLQ}${sw}.SZWESAMP"
 parmlib="\${ZOSPM_TGT_HLQ}PARMLIB"
 proclib="\${ZOSPM_TGT_HLQ}PROCLIB"
 EOF
 
 if [ $? -gt 0 ]; then
-	echo "Unable to create ZWE1B0 Update script: ${script}." >&2
+	echo "Unable to create ${sw} Update script: ${script}." >&2
 	exit 16
 fi
 chmod u+x "${script}"
 
-if [ "${verb}" = "ENABLE" ]; then
+if [ "${verb}" = "CONFIG" ]; then
 cat <<'EOF' >>${script}
 	swesip=`cat "//'${srclib}(ZWESIP00)'"`
 
 	sijcl=`cat "//'${srclib}(ZWESISTC)'"`
-	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "STEPLIB" "${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"`
+	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "STEPLIB" "${ZOSPM_TGT_HLQ}${sw}.SZWEAUTH"`
 	sijcl=`jclReplaceDD "${sijcl}" "ZWESIS01" "PARMLIB" "${parmlib}"`
 
 	sajcl=`cat "//'${srclib}(ZWESASTC)'"`
-	sajcl=`jclReplaceDD "${sajcl}" "ZWESAUX" "STEPLIB" "${ZOSPM_TGT_HLQ}ZWE1B0.SZWEAUTH"`
+	sajcl=`jclReplaceDD "${sajcl}" "ZWESAUX" "STEPLIB" "${ZOSPM_TGT_HLQ}${sw}.SZWEAUTH"`
 EOF
 else
 cat <<'EOF' >>${script}
@@ -51,24 +53,24 @@ EOF
 fi
 
 cat <<'EOF' >>${script}
-procregistrar zwe1b0 "${verb}" ZWESISTC "${sijcl}"
+procregistrar "${sw}" "${verb}" ZWESISTC "${sijcl}"
 chk "$?" "Unable to ${verb} proclib member ${proclib}(ZWESISTC)"
 
-procregistrar zwe1b0 "${verb}" ZWESASTC "${sajcl}"
+procregistrar "${sw}" "${verb}" ZWESASTC "${sajcl}"
 chk "$?" "Unable to ${verb} proclib member ${proclib}(ZWESASTC)"
 
-profhdr="//* ZWE1B0 start */"
-profftr="//* ZWE1B0 end */"
+profhdr="//* ${sw} start */"
+profftr="//* ${sw} end */"
 
-registrar "ZWE1B0" "${verb}" "${parmlib}" "ZWESIP00" "$profhdr" "$profftr" "//*" "*/" "${zwesip}"
+registrar "${sw}" "${verb}" "${parmlib}" "ZWESIP00" "$profhdr" "$profftr" "//*" "*/" "${zwesip}"
 chk "$?" "Unable to ${verb} ${parmlib}(ZWESIP00)"
 
-apfregistrar zwe1b0 "${verb}" "${authlib}"
+apfregistrar "${sw}" "${verb}" "${authlib}"
 chk "$?" "Unable to ${verb} APF Authorization of ${authlib}"
  
 pptText="PPT PGMNAME(ZWESIS01) KEY(4) NOSWAP
 PPT PGMNAME(ZWESAUX) KEY(4) NOSWAP"
-pptregistrar zwe1b0 "${verb}" "${pptText}"
+pptregistrar "${sw}" "${verb}" "${pptText}"
 chk "$?" "Unable to ${verb} PPT entries"
 
 exit $?

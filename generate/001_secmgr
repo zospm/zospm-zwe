@@ -3,13 +3,14 @@
 # JCL below to be converted to script
 #
 
-if ! [ $# -eq 2 ]; then
-	echo "Syntax: 001_secmgr ENABLE|DISABLE <output-script>" >&2
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 001_secmgr <sw> CONFIG|DECONFIG <output-script>" >&2
 	exit 8
 fi
 
-verb="$1"
-script="$2"
+sw="$1"
+verb="$2"
+script="$3"
 zospm=`whence zospm`
 zospmdir=${zospm%/*}
 zospmroot=${zospmdir%/*}
@@ -325,95 +326,95 @@ zzz
 
 SetupRACF() {
 	racfSetGenericClasses "FACILITY UNIXPRIV"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	racfActivateAndShareClasses "FACILITY UNIXPRIV"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
-        if ! `racfGroupExists $ZWE1B0_ADMINGRP` ; then
-                issueTSO "RDEFINE STARTED ** STDATA(USER(=MEMBER) GROUP($ZWE1B0_ADMINGRP))"
-                chk "$?" "Unable to define $ZWE1B0_ADMINGRP"
-	#msf - need to check if AUTOGID is enabled. If not, use ZWE1B0_ADMINGID
-		issueTSO "ADDGROUP $ZWE1B0_ADMINGRP OMVS(AUTOGID) DATA('Zowe Administrators')"
+        if ! `racfGroupExists $ZWE_ADMINGRP` ; then
+                issueTSO "RDEFINE STARTED ** STDATA(USER(=MEMBER) GROUP($ZWE_ADMINGRP))"
+                chk "$?" "Unable to define $ZWE_ADMINGRP"
+	#msf - need to check if AUTOGID is enabled. If not, use ZWE_ADMINGID
+		issueTSO "ADDGROUP $ZWE_ADMINGRP OMVS(AUTOGID) DATA('Zowe Administrators')"
 		chk "$?" "Unable to add group with OMVS segment for Zowe Administrators" 
   	fi
 
-        if ! `racfGroupExists $ZWE1B0_STCGROUP` ; then
-                issueTSO "RDEFINE STARTED ** STDATA(USER(=MEMBER) GROUP($ZWE1B0_STCGROUP))"
-                chk "$?" "Unable to define $ZWE1B0_STCGROUP"
-	#msf - need to check if AUTOGID is enabled. If not, use ZWE1B0_STCGID
-		issueTSO "ADDGROUP $ZWE1B0_STCGROUP OMVS(AUTOGID) DATA('Started Task Group with OMVS Segment')"
+        if ! `racfGroupExists $ZWE_STCGROUP` ; then
+                issueTSO "RDEFINE STARTED ** STDATA(USER(=MEMBER) GROUP($ZWE_STCGROUP))"
+                chk "$?" "Unable to define $ZWE_STCGROUP"
+	#msf - need to check if AUTOGID is enabled. If not, use ZWE_STCGID
+		issueTSO "ADDGROUP $ZWE_STCGROUP OMVS(AUTOGID) DATA('Started Task Group with OMVS Segment')"
 		chk "$?" "Unable to add group with OMVS segment for started tasks"
   	fi
 
-        tsocmd "DELUSER $ZWE1B0_ZOWEUSER" >/dev/null 2>&1
-#msf - need to check if AUTOUID is enabled. If not, use ZWE1B0_ZOWEUID
-	issueTSO "ADDUSER $ZWE1B0_ZOWEUSER DFLTGRP($ZWE1B0_STCGROUP) NOPASSWORD NAME('Zowe Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe Main Server')"
-  	chk "$?" "Unable to create user $ZWE1B0_ZOWEUSER"
+        tsocmd "DELUSER $ZWE_ZOWEUSER" >/dev/null 2>&1
+#msf - need to check if AUTOUID is enabled. If not, use ZWE_ZOWEUID
+	issueTSO "ADDUSER $ZWE_ZOWEUSER DFLTGRP($ZWE_STCGROUP) NOPASSWORD NAME('Zowe Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe Main Server')"
+  	chk "$?" "Unable to create user $ZWE_ZOWEUSER"
 
-        tsocmd "DELUSER $ZWE1B0_XMEMUSER" >/dev/null 2>&1
-#msf - need to check if AUTOUID is enabled. If not, use ZWE1B0_XMEMUID
-	issueTSO "ADDUSER $ZWE1B0_XMEMUSER DFLTGRP($ZWE1B0_STCGROUP) NOPASSWORD NAME('Zowe XMEM Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe XMEM Cross Memory Server')"
-  	chk "$?" "Unable to create user $ZWE1B0_XMEMUSER"
+        tsocmd "DELUSER $ZWE_XMEMUSER" >/dev/null 2>&1
+#msf - need to check if AUTOUID is enabled. If not, use ZWE_XMEMUID
+	issueTSO "ADDUSER $ZWE_XMEMUSER DFLTGRP($ZWE_STCGROUP) NOPASSWORD NAME('Zowe XMEM Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe XMEM Cross Memory Server')"
+  	chk "$?" "Unable to create user $ZWE_XMEMUSER"
 
-        tsocmd "DELUSER $ZWE1B0_AUXUSER" >/dev/null 2>&1
-#msf - need to check if AUTOUID is enabled. If not, use ZWE1B0_AUXUID
-	issueTSO "ADDUSER $ZWE1B0_AUXUSER DFLTGRP($ZWE1B0_STCGROUP) NOPASSWORD NAME('Zowe XMEM AUX Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe XMEM AUX Cross Memory Server')"
-  	chk "$?" "Unable to create user $ZWE1B0_AUXUSER"
+        tsocmd "DELUSER $ZWE_AUXUSER" >/dev/null 2>&1
+#msf - need to check if AUTOUID is enabled. If not, use ZWE_AUXUID
+	issueTSO "ADDUSER $ZWE_AUXUSER DFLTGRP($ZWE_STCGROUP) NOPASSWORD NAME('Zowe XMEM AUX Server') OMVS(AUTOUID HOME(/tmp) PROGRAM(/bin/sh) ) DATA('Zowe XMEM AUX Cross Memory Server')"
+  	chk "$?" "Unable to create user $ZWE_AUXUSER"
 
-	if ! `racfProfileExists "STARTED" "$ZWE1B0_ZOWESTC.*"`; then
-		issueTSO "RDEFINE STARTED $ZWE1B0_ZOWESTC.* STDATA(USER($ZWE1B0_ZOWEUSER) GROUP($ZWE1B0_STCGROUP) TRUSTED(NO)) DATA('Zowe Main Server')"
-		chk "$?" "Unable to define started task $ZWE1B0_ZOWESTC"
+	if ! `racfProfileExists "STARTED" "$ZWE_ZOWESTC.*"`; then
+		issueTSO "RDEFINE STARTED $ZWE_ZOWESTC.* STDATA(USER($ZWE_ZOWEUSER) GROUP($ZWE_STCGROUP) TRUSTED(NO)) DATA('Zowe Main Server')"
+		chk "$?" "Unable to define started task $ZWE_ZOWESTC"
 	fi
 
-	if ! `racfProfileExists "STARTED" "$ZWE1B0_XMEMSTC.*"`; then
-		issueTSO "RDEFINE STARTED $ZWE1B0_XMEMSTC.* STDATA(USER($ZWE1B0_XMEMUSER) GROUP($ZWE1B0_STCGROUP) TRUSTED(NO)) DATA('Zowe XMEM Cross Memory Server')"
-		chk "$?" "Unable to define started task $ZWE1B0_XMEMSTC"
+	if ! `racfProfileExists "STARTED" "$ZWE_XMEMSTC.*"`; then
+		issueTSO "RDEFINE STARTED $ZWE_XMEMSTC.* STDATA(USER($ZWE_XMEMUSER) GROUP($ZWE_STCGROUP) TRUSTED(NO)) DATA('Zowe XMEM Cross Memory Server')"
+		chk "$?" "Unable to define started task $ZWE_XMEMSTC"
 	fi
 
-	if ! `racfProfileExists "STARTED" "$ZWE1B0_AUXSTC.*"`; then
-		issueTSO "RDEFINE STARTED $ZWE1B0_AUXSTC.* STDATA(USER($ZWE1B0_AUXUSER) GROUP($ZWE1B0_STCGROUP) TRUSTED(NO)) DATA('Zowe XMEM Aux Cross Memory Server')"
-		chk "$?" "Unable to define started task $ZWE1B0_XMEMSTC"
+	if ! `racfProfileExists "STARTED" "$ZWE_AUXSTC.*"`; then
+		issueTSO "RDEFINE STARTED $ZWE_AUXSTC.* STDATA(USER($ZWE_AUXUSER) GROUP($ZWE_STCGROUP) TRUSTED(NO)) DATA('Zowe XMEM Aux Cross Memory Server')"
+		chk "$?" "Unable to define started task $ZWE_XMEMSTC"
 	fi
 
         if ! `racfProfileExists "FACILITY" "ZWES.IS"` ; then
 	        issueTSO "RDEFINE FACILITY ZWES.IS UACC(NONE)"
   		chk "$?" "Unable to define profile ZWES.IS"
         fi
-	racfPermitUsers "FACILITY" "ZWES.IS" "READ" "$ZWE1B0_ZOWEUSER" 
-	chk "$?" "Unable to configure ZWE1B0"
+	racfPermitUsers "FACILITY" "ZWES.IS" "READ" "$ZWE_ZOWEUSER" 
+	chk "$?" "Unable to configure ${sw}"
 
         if ! `racfProfileExists "FACILITY" "BPX.SERVER"` ; then
 	        issueTSO "RDEFINE FACILITY BPX.SERVER UACC(NONE)"
   		chk "$?" "Unable to define profile BPX.SERVER"
         fi
-	racfPermitUsers "FACILITY" "BPX.SERVER" "UPDATE" "$ZWE1B0_ZOWEUSER" 
-	chk "$?" "Unable to configure ZWE1B0"
+	racfPermitUsers "FACILITY" "BPX.SERVER" "UPDATE" "$ZWE_ZOWEUSER" 
+	chk "$?" "Unable to configure ${sw}"
 
         if ! `racfProfileExists "FACILITY" "BPX.DAEMON"` ; then
 	        issueTSO "RDEFINE FACILITY BPX.DAEMON UACC(NONE)"
   		chk "$?" "Unable to define profile BPX.DAEMON"
         fi
-	racfPermitUsers "FACILITY" "BPX.DAEMON" "UPDATE" "$ZWE1B0_ZOWEUSER" 
-	chk "$?" "Unable to configure ZWE1B0"
+	racfPermitUsers "FACILITY" "BPX.DAEMON" "UPDATE" "$ZWE_ZOWEUSER" 
+	chk "$?" "Unable to configure ${sw}"
 
         if ! `racfProfileExists "FACILITY" "BPX.JOBNAME"` ; then
 	        issueTSO "RDEFINE FACILITY BPX.JOBNAME UACC(NONE)"
   		chk "$?" "Unable to define profile BPX.JOBNAME"
         fi
-	racfPermitUsers "FACILITY" "BPX.JOBNAME" "READ" "$ZWE1B0_ZOWEUSER" 
-	chk "$?" "Unable to configure ZWE1B0"
+	racfPermitUsers "FACILITY" "BPX.JOBNAME" "READ" "$ZWE_ZOWEUSER" 
+	chk "$?" "Unable to configure ${sw}"
 
         if ! `racfProfileExists "UNIXPRIV" "SUPERUSER.FILESYS"` ; then
 	        issueTSO "RDEFINE UNIXPRIV SUPERUSER.FILESYS UACC(NONE)"
   		chk "$?" "Unable to define profile SUPERUSER.FILESYS"
         fi
-	racfPermitUsers "UNIXPRIV" "SUPERUSER.FILESYS" "CONTROL" "$ZWE1B0_ZOWEUSER" 
-	chk "$?" "Unable to configure ZWE1B0"
+	racfPermitUsers "UNIXPRIV" "SUPERUSER.FILESYS" "CONTROL" "$ZWE_ZOWEUSER" 
+	chk "$?" "Unable to configure ${sw}"
 
-	if ! `racfGroupExists $ZWE1B0_HLQ` ; then
-		issueTSO "ADDGROUP $ZWE1B0_HLQ DATA('Zowe -HLQ STUB')"
-		chk "$?" "Unable to add group $ZWE1B0_HLQ"
+	if ! `racfGroupExists $ZWE_HLQ` ; then
+		issueTSO "ADDGROUP $ZWE_HLQ DATA('Zowe -HLQ STUB')"
+		chk "$?" "Unable to add group $ZWE_HLQ"
 	fi
 	if `racfEnhancedGenericNamingInEffect`; then
 		wildcard="*.**"
@@ -421,15 +422,15 @@ SetupRACF() {
 		wildcard="*"
 	fi
 
-	if ! `racfDatasetProfileExists "$ZWE1B0_HLQ.$wildcard"`; then
-		issueTSO "ADDSD  '$ZWE1B0_HLQ.$wildcard' UACC(READ) DATA('Zowe')"
-		chk "$?" "Unable to add dataset profile $ZWE1B0_HLQ"
+	if ! `racfDatasetProfileExists "$ZWE_HLQ.$wildcard"`; then
+		issueTSO "ADDSD  '$ZWE_HLQ.$wildcard' UACC(READ) DATA('Zowe')"
+		chk "$?" "Unable to add dataset profile $ZWE_HLQ"
 
-		racfPermitUsers "DATASET" "'$ZWE1B0_HLQ.$wildcard'" "ALTER" "$ZWE1B0_SYSPROG"
-		chk "$?" "Unable to configure ZWE1B0"
+		racfPermitUsers "DATASET" "'$ZWE_HLQ.$wildcard'" "ALTER" "$ZWE_SYSPROG"
+		chk "$?" "Unable to configure ${sw}"
 	fi
   	racfRefreshClasses "FACILITY STARTED"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	return 0
 }
@@ -438,7 +439,8 @@ EOF
 chmod u+x "${script}"
 cat << EOF >>${script}
 export PATH=${zospmdir}:\$PATH
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 #set -x
 sp=\`secmgr\`
 if [ "\${sp}" = "RCVT" ]; then

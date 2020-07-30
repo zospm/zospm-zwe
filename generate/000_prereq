@@ -7,7 +7,7 @@ if ! [ $# -eq 3 ]; then
 	exit 8
 fi
 
-verb="$1"
+sw="$1"
 verb="$2"
 script="$3"
 zospm=`whence zospm`
@@ -96,6 +96,7 @@ chmod u+x "${script}"
 
 cat << EOF >>${script}
 export PATH=${zospmdir}:\$PATH
+export sw="${sw}"
 . zospmsetswenv "${sw}"
 EOF
 
@@ -159,8 +160,8 @@ chkNode() {
 }
 
 chkzOSMF() {
-	if `undefinedProperty $ZWE1B0_HOSTNAME`; then
-		echo "000_prereq: need to specify ZWE1B0_HOSTNAME to configure Zowe" >&2
+	if `undefinedProperty $ZWE_HOSTNAME`; then
+		echo "000_prereq: need to specify ZWE_HOSTNAME to configure Zowe" >&2
 		return 4
 	fi
 	zosmfnetstat=`tsocmd netstat 2>/dev/null | grep IZUSVR | grep ".*Listen"`
@@ -171,9 +172,9 @@ chkzOSMF() {
 	fi
  	zosmfqualifiedport=`echo "${zosmfnetstat}" | awk '{ print $4 }'`
 	zosmfport=${zosmfqualifiedport##*.}
-	httpsget "https://${ZWE1B0_HOSTNAME}:${zosmfport}/zosmf/info" >/dev/null
+	httpsget "https://${ZWE_HOSTNAME}:${zosmfport}/zosmf/info" >/dev/null
 	if [ $rc -gt 0 ]; then
-		echo "000_prereq: unable to connect to https://${ZWE1B0_HOSTNAME}:${zosmfport}/zosmf/info. Start z/OSMF before configuring Zowe" >&2
+		echo "000_prereq: unable to connect to https://${ZWE_HOSTNAME}:${zosmfport}/zosmf/info. Start z/OSMF before configuring Zowe" >&2
 		return 4
 	fi
 	return 0

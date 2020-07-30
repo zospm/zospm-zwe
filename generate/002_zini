@@ -1,11 +1,12 @@
 #!/bin/sh
 
-if ! [ $# -eq 2 ]; then
-	echo "Syntax: 002_zini ENABLE|DISABLE <output-script>" >&2
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 002_zini <sw> CONFIG|DECONFIG <output-script>" >&2
 	exit 8
 fi
-verb="$1"
-script="$2"
+sw="$1"
+verb="$2"
+script="$3"
 
 zospm=`whence zospm`
 zospmdir=${zospm%/*}
@@ -16,42 +17,43 @@ cat << EOF >${script}
 #set -x
 export verb="${verb}"
 export PATH=${zospmdir}:\$PATH
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 
 set +x
 zowedir="\${ZOSPM_TGT_ZFSROOT}usr/lpp/zowe"
-zoweinstancedir="\${ZWE1B0_INSTANCE_ROOT}"
+zoweinstancedir="\${ZWE_INSTANCE_ROOT}"
 EOF
 
 if [ $? -gt 0 ]; then
-	echo "Unable to create ZWE1B0 Update script: ${script}." >&2
+	echo "Unable to create ${sw} Update script: ${script}." >&2
 	exit 16
 fi
 chmod u+x "${script}"
 
-if [ "${verb}" = "ENABLE" ]; then
+if [ "${verb}" = "CONFIG" ]; then
 cat <<'EOF' >>${script}
-	chkProperties "ZWE1B0_KEYSTORE_DIRECTORY ZWE1B0_LOGDIR ZWE1B0_INSTANCE_ROOT"
+	chkProperties "ZWE_KEYSTORE_DIRECTORY ZWE_LOGDIR ZWE_INSTANCE_ROOT"
 	if [ $? -gt 0 ]; then
 		echo "002_zini failed." >&2
 		exit 8
 	fi
 
-	rm -rf "${ZWE1B0_KEYSTORE_DIRECTORY}" "${ZWE1B0_LOGDIR}" "${ZWE1B0_INSTANCE_ROOT}"
-	mkdir -p "${ZWE1B0_KEYSTORE_DIRECTORY}" "${ZWE1B0_LOGDIR}" "${ZWE1B0_INSTANCE_ROOT}"
+	rm -rf "${ZWE_KEYSTORE_DIRECTORY}" "${ZWE_LOGDIR}" "${ZWE_INSTANCE_ROOT}"
+	mkdir -p "${ZWE_KEYSTORE_DIRECTORY}" "${ZWE_LOGDIR}" "${ZWE_INSTANCE_ROOT}"
 	rc=$?
 	if [ $rc -gt 0 ]; then
-		echo "Unable to create instance directories: ${ZWE1B0_KEYSTORE_DIRECTORY} ${ZWE1B0_LOGDIR} ${ZWE1B0_INSTANCE_ROOT}"
+		echo "Unable to create instance directories: ${ZWE_KEYSTORE_DIRECTORY} ${ZWE_LOGDIR} ${ZWE_INSTANCE_ROOT}"
 		exit $rd
 	fi
-	chmod -R 770 "${ZWE1B0_KEYSTORE_DIRECTORY}" "${ZWE1B0_LOGDIR}" "${ZWE1B0_INSTANCE_ROOT}" 
+	chmod -R 770 "${ZWE_KEYSTORE_DIRECTORY}" "${ZWE_LOGDIR}" "${ZWE_INSTANCE_ROOT}" 
 	if [ $rc -gt 0 ]; then
-		echo "Unable to change ownership for instance directories: ${ZWE1B0_KEYSTORE_DIRECTORY} ${ZWE1B0_LOGDIR} ${ZWE1B0_INSTANCE_ROOT}"
+		echo "Unable to change ownership for instance directories: ${ZWE_KEYSTORE_DIRECTORY} ${ZWE_LOGDIR} ${ZWE_INSTANCE_ROOT}"
 		exit $rd
 	fi
-	chown ${ZWE1B0_ZOWEUSER}:${ZWE1B0_ADMINGRP} "${ZWE1B0_KEYSTORE_DIRECTORY}" "${ZWE1B0_LOGDIR}" "${ZWE1B0_INSTANCE_ROOT}" 
+	chown ${ZWE_ZOWEUSER}:${ZWE_ADMINGRP} "${ZWE_KEYSTORE_DIRECTORY}" "${ZWE_LOGDIR}" "${ZWE_INSTANCE_ROOT}" 
 	if [ $rc -gt 0 ]; then
-		echo "Unable to change ownership for instance directories: ${ZWE1B0_KEYSTORE_DIRECTORY} ${ZWE1B0_LOGDIR} ${ZWE1B0_INSTANCE_ROOT}"
+		echo "Unable to change ownership for instance directories: ${ZWE_KEYSTORE_DIRECTORY} ${ZWE_LOGDIR} ${ZWE_INSTANCE_ROOT}"
 		exit $rd
 	fi
 EOF

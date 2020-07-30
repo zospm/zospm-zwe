@@ -1,11 +1,12 @@
 #!/bin/sh
 
-if ! [ $# -eq 2 ]; then
-	echo "Syntax: 006svcfg ENABLE|DISABLE <output-script>" >&2
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 006svcfg <sw> CONFIG|DECONFIG <output-script>" >&2
 	exit 8
 fi
-verb="$1"
-script="$2"
+sw="$1"
+verb="$2"
+script="$3"
 
 zospm=`whence zospm`
 zospmdir=${zospm%/*}
@@ -16,20 +17,21 @@ cat << EOF >${script}
 #set -x
 export verb="${verb}"
 export PATH=${zospmdir}:\$PATH
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 
 set +x
 proclib="\${ZOSPM_TGT_HLQ}PROCLIB"
-zoweinstancedir="\${ZWE1B0_INSTANCE_ROOT}"
+zoweinstancedir="\${ZWE_INSTANCE_ROOT}"
 EOF
 
 if [ $? -gt 0 ]; then
-	echo "Unable to create ZWE1B0 Update script: ${script}." >&2
+	echo "Unable to create ${sw} Update script: ${script}." >&2
 	exit 16
 fi
 chmod u+x "${script}"
 
-if [ "${verb}" = "ENABLE" ]; then
+if [ "${verb}" = "CONFIG" ]; then
 cat <<'EOF' >>${script}
 	decho "//* ZWESVSTC: Started task to run Zowe
 //ZWESVSTC   PROC INSTANCE='${zoweinstancedir}'

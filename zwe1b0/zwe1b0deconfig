@@ -1,23 +1,5 @@
 #!/bin/sh
 . zospmsetenv
+mydir=$(callerdir ${0})
 
-zweRoot="${ZOSPM_WORKROOT}/deconfig/zwe1b0"
-mkdir -p "${zweRoot}"
-rc=$?
-if [ $rc -gt 0 ]; then
-	echo "Unable to create de-configuration directory: ${zweRoot}"
-	exit $rc
-fi
-
-cd "${mydir}/generate"
-steps=`echo *`
-cd $OLDPWD
-for step in ${steps}; do
-	script="${zweRoot}/${step}.sh"
-	"${mydir}/generate/${step}" DISABLE "${script}"
-	if [ $? -gt 0 ]; then
-		exit $?
-	fi
-done
-
-exit 0
+zospmgensteps zwe1b0 deconfig "${mydir}/../generate" "${ZOSPM_WORKROOT}"

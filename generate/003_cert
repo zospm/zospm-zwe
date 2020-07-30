@@ -1,11 +1,12 @@
 #!/bin/sh
 
-if ! [ $# -eq 2 ]; then
-	echo "Syntax: 003_cert ENABLE|DISABLE <output-script>" >&2
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 003_cert <sw> CONFIG|DECONFIG <output-script>" >&2
 	exit 8
 fi
-verb="$1"
-script="$2"
+sw="$1"
+verb="$2"
+script="$3"
 
 zospm=`whence zospm`
 zospmdir=${zospm%/*}
@@ -16,18 +17,19 @@ cat << EOF >${script}
 #set -x
 export verb="${verb}"
 export PATH=${zospmdir}:\$PATH
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 
 set +x
 EOF
 
 if [ $? -gt 0 ]; then
-	echo "Unable to create ZWE1B0 Update script: ${script}." >&2
+	echo "Unable to create ${sw} Update script: ${script}." >&2
 	exit 16
 fi
 chmod u+x "${script}"
 
-if [ "${verb}" = "DISABLE" ]; then
+if [ "${verb}" = "DECONFIG" ]; then
 cat <<'EOF' >>${script}
 SetupCertificates() {
 	return 0
@@ -36,11 +38,11 @@ SetupRACF() {
 	return 0
 }
 SetupTopSecret() {
-	echo "003_cert Need to implement TopSecret ENABLE" >&2
+	echo "003_cert Need to implement TopSecret CONFIG" >&2
 	return 8
 }
 SetupACF2() {
-	echo "003_cert Need to implement ACF2 ENABLE" >&2
+	echo "003_cert Need to implement ACF2 CONFIG" >&2
 	return 8
 }
 
@@ -48,26 +50,26 @@ EOF
 else
 cat <<'EOF' >>${script}
 SetupRACF() {
-	export name="${ZWE1B0_PKCS11_TOKEN_NAME}"  
-	export label="${ZWE1B0_PKCS11_TOKEN_LABEL}"  
-	export user="${ZWE1B0_PKCS11_TOKEN_CREATOR}"  
+	export name="${ZWE_PKCS11_TOKEN_NAME}"  
+	export label="${ZWE_PKCS11_TOKEN_LABEL}"  
+	export user="${ZWE_PKCS11_TOKEN_CREATOR}"  
 	if `undefinedProperty "${name}"` ; then
-		echo "003_cert ZWE1B0_PKCS11_TOKEN_NAME must be defined" >&2
+		echo "003_cert ZWE_PKCS11_TOKEN_NAME must be defined" >&2
 		return 8
 	fi
 	if `undefinedProperty "${label}"` ; then
-		echo "003_cert ZWE1B0_PKCS11_TOKEN_LABEL must be defined" >&2
+		echo "003_cert ZWE_PKCS11_TOKEN_LABEL must be defined" >&2
 		return 8
 	fi
 	if `undefinedProperty "${user}"` ; then
-		echo "003_cert ZWE1B0_PKCS11_TOKEN_CREATOR must be defined" >&2
+		echo "003_cert ZWE_PKCS11_TOKEN_CREATOR must be defined" >&2
 		return 8
 	fi
 
 	racfSetGenericClasses "CRYPTOZ"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 	racfActivateAndShareClasses "CRYPTOZ"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	if ! `racfProfileExists "CRYPTOZ" "SO.**"` ; then
 		issueTSO "RDEFINE CRYPTOZ SO.** UACC(NONE)"
@@ -78,44 +80,44 @@ SetupRACF() {
 		chk "$?" "Unable to define CRYPTOZ profile USER.${PKCS11_TOKEN_NAME}"
 	fi
 	racfPermitUsers "CRYPTOZ" "SO.**" "UPDATE" "${user}"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	racfPermitUsers "CRYPTOZ" "USER.${name}" "UPDATE" "${user}"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	racfRefreshClasses "CRYPTOZ"
-	chk "$?" "Unable to configure ZWE1B0"
+	chk "$?" "Unable to configure ${sw}"
 
 	return 0
 }
 
 SetupTopSecret() {
-	echo "003_cert Need to implement TopSecret DISABLE" >&2
+	echo "003_cert Need to implement TopSecret DECONFIG" >&2
 	return 8
 }
 
 SetupACF2() {
-	echo "003_cert Need to implement ACF2 DISABLE" >&2
+	echo "003_cert Need to implement ACF2 DECONFIG" >&2
 	return 8
 }
 SetupCertificates() {
 	ZOWE_ROOT="${ZOSPM_TGT_ZFSROOT}/usr/lpp/zowe/"
 	zospmZoweConfigFile="${ZOSPM_TMP}/zoweconfig.$$.tmp"
 	echo "
-              	HOSTNAME=${ZWE1B0_HOSTNAME}
-		IPADDRESS=${ZWE1B0_IPADDRESS}
-		VERIFY_CERTIFICATES=${ZWE1B0_VERIFY_CERTIFICATES}
-		EXTERNAL_CERTIFICATE=${ZWE1B0_EXTERNAL_CERTIFICATE}
-		EXTERNAL_CERTIFICATE_ALIAS=${ZWE1B0_CERTIFICATE_ALIAS}
+              	HOSTNAME=${ZWE_HOSTNAME}
+		IPADDRESS=${ZWE_IPADDRESS}
+		VERIFY_CERTIFICATES=${ZWE_VERIFY_CERTIFICATES}
+		EXTERNAL_CERTIFICATE=${ZWE_EXTERNAL_CERTIFICATE}
+		EXTERNAL_CERTIFICATE_ALIAS=${ZWE_CERTIFICATE_ALIAS}
 		EXTERNAL_CERTIFICATE_AUTHORITIES=${ZOSPM_CERTIFICATE_AUTHORITES}
 		ZOSMF_CERTIFICATE=${ZOS240_ZOSMF_CERTIFICATE}
-		KEYSTORE_PASSWORD=${ZWE1B0_KEYSTORE_PASSWORD}
-		KEYSTORE_DIRECTORY=${ZWE1B0_KEYSTORE_DIRECTORY}
-		KEYSTORE_ALIAS=${ZWE1B0_KEYSTORE_ALIAS}
-		ZOWE_USER_ID=${ZWE1B0_ZOWEUSER}
-		ZOWE_GROUP_ID=${ZWE1B0_ADMINGRP}
-		PKCS11_TOKEN_NAME=${ZWE1B0_PKCS11_TOKEN_NAME}  
-		PKCS11_TOKEN_LABEL=${ZWE1B0_PKCS11_TOKEN_LABEL}  
+		KEYSTORE_PASSWORD=${ZWE_KEYSTORE_PASSWORD}
+		KEYSTORE_DIRECTORY=${ZWE_KEYSTORE_DIRECTORY}
+		KEYSTORE_ALIAS=${ZWE_KEYSTORE_ALIAS}
+		ZOWE_USER_ID=${ZWE_ZOWEUSER}
+		ZOWE_GROUP_ID=${ZWE_ADMINGRP}
+		PKCS11_TOKEN_NAME=${ZWE_PKCS11_TOKEN_NAME}  
+		PKCS11_TOKEN_LABEL=${ZWE_PKCS11_TOKEN_LABEL}  
 	" >${zospmZoweConfigFile}
 	${ZOWE_ROOT}/bin/zowe-setup-certificates.sh -p ${zospmZoweConfigFile}
 
@@ -125,7 +127,8 @@ EOF
 fi
 
 cat <<'EOF' >>${script}
-. zospmsetswenv zwe1b0
+export sw="${sw}"
+. zospmsetswenv "${sw}"
 #set -x
 sp=`secmgr`
 if [ "${sp}" = "RCVT" ]; then                                       
