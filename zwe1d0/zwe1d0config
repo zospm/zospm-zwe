@@ -1,0 +1,5 @@
+#!/bin/sh
+. zospmsetenv
+mydir=$(callerdir ${0})
+
+zospmgensteps zwe1d0 config "${mydir}/../generate" "${ZOSPM_WORKROOT}"

@@ -1,0 +1,202 @@
+#!/bin/sh
+# Check that pre-req software is installed and configured on the system
+#
+
+if ! [ $# -eq 3 ]; then
+	echo "Syntax: 000_prereq <sw> CONFIG|DECONFIG <output-script>" >&2
+	exit 8
+fi
+
+verb="$1"
+verb="$2"
+script="$3"
+zospm=`whence zospm`
+zospmdir=${zospm%/*}
+zospmroot=${zospmdir%/*}
+
+cat <<'EOF' >${script}
+#!/bin/sh   
+CreateCKDS() {
+	return 0
+}
+CreatePKDS() {
+	return 0
+}
+CreateTKDS() {
+	cluster="CSF.SCSFTKDS"
+
+	err=${ZOSPM_TMP}/csftkds.$$.err
+	touch "${err}"
+	mvscmdauth --pgm=IDCAMS --sysprint=* --sysin=stdin >"${err}" <<zz
+  DEFINE CLUSTER (NAME(${cluster}) -
+                  RECORDS(100 50)            -
+                  RECORDSIZE(2200,32756)     -
+                  KEYS(72 0)                 -
+                  FREESPACE(0,0)             -
+                  SPANNED                    -
+                  SHAREOPTIONS(2,3))         -
+            DATA (NAME(${cluster}.DATA) -
+                  BUFFERSPACE(100000)        -
+                  ERASE)                     -
+           INDEX (NAME(${cluster}.INDEX))
+zz
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "CreateTKDS: Unable to create VSAM cluster ${cluster}" >&2
+		cat "${err}" >&2
+		return $rc
+	fi
+
+	rm -f "${err}"
+	touch "${err}"
+
+# REPRO TKDS dataset
+
+	reprods=`mvstmp $(hlq)`
+	drm -f "${reprods}"
+	dtouch -tseq -rfb -l156 "${reprods}"
+	mvscmd --pgm=IEBGENER --sysprint=* --sysut1=dummy --sysut2="${reprods}" --sysin=stdin >"${err}" <<zz
+  GENERATE MAXFLDS=10,MAXLITS=156
+  RECORD FIELD=(20,X'0000000000000000000000000000000000000000',,1),
+         FIELD=(20,X'0000000000000000000000000000000000000000',,21),
+         FIELD=(20,X'E3C8C4D900000000000000000000000000000000',,41),
+         FIELD=(20,X'0000000000000000000000000000000000000000',,61),
+         FIELD=(16,X'00000000000000000000000000000000',,81),
+         FIELD=(16,X'00000000000000000000000000000000',,97),
+         FIELD=(4,X'0000009C',,113),
+         FIELD=(16,X'00000000000000000000000000000000',,117),
+         FIELD=(20,X'0000000000000000000000000000000000000000',,133),
+         FIELD=(4,X'00000200',,153) 
+zz
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "CreateTKDS: Unable to generate repro file for ${cluster}" >&2
+		cat "${err}" >&2
+		return $rc
+	fi
+	
+	mvscmdauth --pgm=IDCAMS --sysprint=* --sysin=stdin --sysdata="${reprods}" >"${err}" <<zz
+  REPRO INFILE(SYSDATA) -
+  OUTDATASET(${cluster})
+zz
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "CreateTKDS: Unable to repro ${reprods} to ${cluster}" >&2
+		cat "${err}" >&2
+		return $rc
+	fi
+	rm -f "${err}"
+	drm -f "${reprods}"
+
+	return 0
+}
+
+EOF
+chmod u+x "${script}"
+
+cat << EOF >>${script}
+export PATH=${zospmdir}:\$PATH
+. zospmsetswenv "${sw}"
+EOF
+
+cat <<'EOF' >>${script}
+#
+# Check that ICSF is properly configured for Zowe.
+# TBD - if not, create the dataset (see CreateTKDS, CreatePKDS, CreateCKDS)
+#
+chkICSF() {
+	opercmd 'd icsf,kds' 2>/dev/null | awk '
+		BEGIN { 
+			tkdsFound=0; 
+		} 
+		{ 
+			if ($1 == "TKDS") { 
+				if (NF == 2) {
+					tkdsFound=1; 
+				} else { 
+					print "TKDS not initialized"; 
+					exit 4; 
+				} 
+			}
+		} 
+		END { 
+			if (tkdsFound) { 
+				exit 0; 
+			} else { 
+				print "No TKDS Entry for ICSF"; 
+				exit 8; 
+			}
+		}' >&2
+	return $?
+}
+
+chkJava() {
+	if `undefinedProperty $ZOSPM_JAVA_HOME`; then
+		echo "000_prereq: need to specify ZOSPM_JAVA_HOME to configure Zowe" >&2
+		return 4
+	fi
+	$ZOSPM_JAVA_HOME/bin/java -version >/dev/null 2>&1
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "000_prereq: unable to run $ZOSPM_JAVA_HOME/bin/java -version. Configure Java before configuring Zowe" >&2
+		return $rc
+	fi
+	return 0
+}
+
+chkNode() {
+	if `undefinedProperty $ZOSPM_NODE_HOME`; then
+		echo "000_prereq: need to specify ZOSPM_NODE_HOME to configure Zowe" >&2
+		return 4
+	fi
+	$ZOSPM_NODE_HOME/bin/node --version >/dev/null
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "000_prereq: unable to run $ZOSPM_NODE_HOME/bin/node --version. Configure Node.js before configuring Zowe" >&2
+		return $rc
+	fi
+	return 0
+}
+
+chkzOSMF() {
+	if `undefinedProperty $ZWE1B0_HOSTNAME`; then
+		echo "000_prereq: need to specify ZWE1B0_HOSTNAME to configure Zowe" >&2
+		return 4
+	fi
+	zosmfnetstat=`tsocmd netstat 2>/dev/null | grep IZUSVR | grep ".*Listen"`
+	rc=$?
+	if [ $rc -gt 0 ]; then
+		echo "000_prereq: unable to determine port z/OSMF (IZUSVR*) is listening on. Start z/OSMF before configuring Zowe" >&2
+		return 4
+	fi
+ 	zosmfqualifiedport=`echo "${zosmfnetstat}" | awk '{ print $4 }'`
+	zosmfport=${zosmfqualifiedport##*.}
+	httpsget "https://${ZWE1B0_HOSTNAME}:${zosmfport}/zosmf/info" >/dev/null
+	if [ $rc -gt 0 ]; then
+		echo "000_prereq: unable to connect to https://${ZWE1B0_HOSTNAME}:${zosmfport}/zosmf/info. Start z/OSMF before configuring Zowe" >&2
+		return 4
+	fi
+	return 0
+}
+
+#set -x
+
+chkICSF	
+rcICSF=$?
+
+chkJava
+rcJava=$?
+
+chkNode
+rcNode=$?
+
+chkzOSMF
+rczOSMF=$?
+
+rc=$(( $rcICSF + $rcJava + $rcNode + $rczOSMF ))
+exit $rc
+exit 0
+EOF
+
+exit 0
+

@@ -1,0 +1,26 @@
+#!/bin/sh
+. zospmsetswenv zwe
+
+`zwegen deconfig 1d0`
+zweRoot="${ZOSPM_WORKROOT}/deconfig"
+zweVRM="1d0"
+zweDir="${zweRoot}/zwe${zweVRM}"
+mkdir -p "${zweDir}"
+rc=$?
+if [ $rc -gt 0 ]; then
+	echo "Unable to create de-configuration directory: ${zweDir}"
+	exit $rc
+fi
+
+cd "${mydir}/generate"
+steps=`echo *`
+cd $OLDPWD
+for step in ${steps}; do
+	script="${zweRoot}/${step}.sh"
+	"${mydir}/generate/${step}" DISABLE "${script}"
+	if [ $? -gt 0 ]; then
+		exit $?
+	fi
+done
+
+exit 0
