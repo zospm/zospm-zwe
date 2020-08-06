@@ -116,12 +116,12 @@ SetupCertificates() {
 		KEYSTORE_ALIAS=${ZWE_KEYSTORE_ALIAS}
 		ZOWE_USER_ID=${ZWE_ZOWEUSER}
 		ZOWE_GROUP_ID=${ZWE_ADMINGRP}
+		SSO_FALLBACK_TO_NATIVE_AUTH="${ZWE_SSO_FALLBACK_TO_NATIVE_AUTH}"
 		PKCS11_TOKEN_NAME=${ZWE_PKCS11_TOKEN_NAME}  
 		PKCS11_TOKEN_LABEL=${ZWE_PKCS11_TOKEN_LABEL}  
 	" >${zospmZoweConfigFile}
 	${ZOWE_ROOT}/bin/zowe-setup-certificates.sh -p ${zospmZoweConfigFile}
-
-	return 0
+	return $?
 }
 EOF
 fi

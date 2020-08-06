@@ -34,9 +34,13 @@
 			"ZWE_KEYSTORE_PASSWORD":  "PASSWORD",
 			"ZWE_KEYSTORE_DIRECTORY":  "/global/zowe/keystore",
 			"ZWE_KEYSTORE_ALIAS":  "localhost",
+			"ZWE_SSO_FALLBACK_TO_NATIVE_AUTH":  "true",
 
 			"ZWE_LOGDIR":  "/global/zowe/logs",
 			"ZWE_INSTANCE_ROOT":  "/global/zowe/instance",
+
+			"ZWE_ZOWE_PREFIX":"ZWE",
+			"ZWE_ZOWE_INSTANCE":"1",
 
 			"ZWE_PKCS11_TOKEN_CREATOR": "IBMUSER",
 			"ZWE_PKCS11_TOKEN_NAME": "ZOWETKN",

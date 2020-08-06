@@ -1,5 +1,2 @@
 #!/bin/sh
-. zospmsetenv
-mydir=$(callerdir ${0})
-
-zospmgensteps zwe1d0 deconfig "${mydir}/../generate" "${ZOSPM_WORKROOT}"
+exit 0

@@ -2,4 +2,10 @@
 . zospmsetenv
 mydir=$(callerdir ${0})
 
+# 
+# Generate the config and deconfig steps
+# config steps will be run after configure
+# deconfig steps will be run before deconfigure
+#
 zospmgensteps zwe1b0 config "${mydir}/../generate" "${ZOSPM_WORKROOT}"
+zospmgensteps zwe1b0 deconfig "${mydir}/../generate" "${ZOSPM_WORKROOT}"

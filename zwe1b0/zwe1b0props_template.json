@@ -38,6 +38,9 @@
 			"ZWE_LOGDIR":  "/global/zowe/logs",
 			"ZWE_INSTANCE_ROOT":  "/global/zowe/instance",
 
+			"ZWE_ZOWE_PREFIX":"ZWE",
+			"ZWE_ZOWE_INSTANCE":"1",
+
 			"ZWE_PKCS11_TOKEN_CREATOR": "IBMUSER",
 			"ZWE_PKCS11_TOKEN_NAME": "ZOWETKN",
 			"ZWE_PKCS11_TOKEN_LABEL": "ZOWELBL",

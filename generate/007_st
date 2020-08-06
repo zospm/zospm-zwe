@@ -33,13 +33,13 @@ chmod u+x "${script}"
 
 if [ "${verb}" = "CONFIG" ]; then
 cat <<'EOF' >>${script}
-	opercmd 'start zwesistc'
-	opercmd 'start zwesvstc'
+	opercmd 'START ZWESISTC'
+	opercmd "START ZWESVSTC,JOBNAME=${ZWE_ZOWE_PREFIX}${ZWE_ZOWE_INSTANCE}SV"
 EOF
 else
 cat <<'EOF' >>${script}
-	opercmd 'cancel zwesvstc'
-	opercmd 'cancel zwesistc'
+	opercmd "CANCEL ${ZWE_ZOWE_PREFIX}${ZWE_ZOWE_INSTANCE}SV"
+	opercmd 'CANCEL ZWESISTC'
 EOF
 fi
 exit $?

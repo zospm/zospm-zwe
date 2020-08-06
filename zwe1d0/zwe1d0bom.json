@@ -24,6 +24,8 @@
 			{
 				"dsname":"SZWEZFS",
 				"dstype":"ZFS",
+				"primary":21000, 
+				"secondary":2100, 
 				"zones":["T"],
 				"dddefpath":"usr/lpp/zowe/SMPE/",
 				"mountpnt":"usr/lpp/zowe/",

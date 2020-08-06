@@ -44,10 +44,13 @@ cat <<'EOF' >>${script}
 	export ZOWE_IP_ADDRESS="${ZWE_IPADDRESS}"
 	export ZOWE_ZOSMF_HOST="${ZWE_IPADDRESS}"
 
+	rm -f "${zoweinstancedir}/instance.env"
+
 	"${zowedir}/bin/zowe-configure-instance.sh" -c "${zoweinstancedir}"
 
 	cat <<NESTEOF >>"${zoweinstancedir}/instance.env"
-
+		ZOWE_PREFIX="${ZWE_ZOWE_PREFIX}"
+		ZOWE_INSTANCE="${ZWE_ZOWE_INSTANCE}"
 		CATALOG_PORT="${ZWE_CATALOG_PORT}"
 		DISCOVERY_PORT="${ZWE_DISCOVERY_PORT}"
 		GATEWAY_PORT="${ZWE_GATEWAY_PORT}"
@@ -59,7 +62,6 @@ cat <<'EOF' >>${script}
 		ZOWE_ZLUX_SERVER_HTTPS_PORT="${ZWE_ZOWE_ZLUX_SERVER_HTTPS_PORT}"
 		ZOWE_ZSS_SERVER_PORT="${ZWE_ZOWE_ZSS_SERVER_PORT}"
 NESTEOF
-	a2e "${zoweinstancedir}/instance.env"
 EOF
 else
 cat <<'EOF' >>${script}
